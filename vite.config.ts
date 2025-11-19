@@ -1,20 +1,28 @@
 import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
+import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: [
-                'resources/css/app.css',
-                'resources/js/app.tsx',
-            ],
+            input: 'resources/js/app.tsx',
             refresh: true,
         }),
         react(),
     ],
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+        },
+    },
+    // THIS IS THE FIX FOR VERCEL
     build: {
-        outDir: 'public/build',        // ← THIS LINE IS THE FIX
-        manifest: true,                // ← keep this
+        rollupOptions: {
+            external: ['fsevents'], // ← this line fixes your exact error
+        },
+    },
+    // This prevents node built-ins from being bundled
+    optimizeDeps: {
+        exclude: ['fsevents'],
     },
 });
