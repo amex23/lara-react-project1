@@ -5,18 +5,35 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [
     laravel({
-      input: 'resources/js/app.tsx',
+      input: [
+        'resources/css/app.css',
+        'resources/js/app.tsx',
+      ],
       refresh: true,
     }),
     react(),
   ],
 
-  // THIS IS THE REAL VERCEL FIX
+  // FULL VERCEL NODE.JS EXTERNALIZATION FIX
+  define: {
+    global: 'globalThis',
+  },
+  resolve: {
+    alias: {
+      '@': '/resources/js',
+      // Prevent Node.js leaks
+      'node:path': 'path-browserify',
+      'node:module': false,  // Block createRequire entirely
+      'node:fs': false,
+      'node:util': false,
+      'node:events': false,
+    },
+  },
   build: {
     rollupOptions: {
-      // Externalize ALL Node.js built-ins + fsevents
       external: [
         'fsevents',
+        'node:module',
         'node:path',
         'node:fs',
         'node:fs/promises',
@@ -27,13 +44,24 @@ export default defineConfig({
         'node:util',
         'node:crypto',
         'node:events',
+        'node:assert',
+        'node:zlib',
       ],
+      output: {
+        globals: {
+          // Map Node.js to browser globals
+          'node:module': '__vite-browser-external',
+        },
+      },
+    },
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
-
-  resolve: {
-    alias: {
-      '@': '/resources/js',
-    },
+  optimizeDeps: {
+    exclude: [
+      'fsevents',
+      'node:module',
+    ],
   },
 });
