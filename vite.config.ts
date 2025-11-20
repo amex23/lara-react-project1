@@ -3,23 +3,37 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-    plugins: [
-        laravel({
-            input: [
-                'resources/css/app.css',
-                'resources/js/app.tsx',
-            ],
-            refresh: true,
-        }),
-        react(),
-    ],
-    // Fix for Vercel + fsevents/Rollup errors
-    build: {
-        rollupOptions: {
-            external: ['fsevents'],  // ← This excludes the macOS module
-        },
+  plugins: [
+    laravel({
+      input: 'resources/js/app.tsx',
+      refresh: true,
+    }),
+    react(),
+  ],
+
+  // THIS IS THE REAL VERCEL FIX
+  build: {
+    rollupOptions: {
+      // Externalize ALL Node.js built-ins + fsevents
+      external: [
+        'fsevents',
+        'node:path',
+        'node:fs',
+        'node:fs/promises',
+        'node:url',
+        'node:process',
+        'node:buffer',
+        'node:stream',
+        'node:util',
+        'node:crypto',
+        'node:events',
+      ],
     },
-    optimizeDeps: {
-        exclude: ['fsevents'],  // ← Prevent pre-bundling issues
+  },
+
+  resolve: {
+    alias: {
+      '@': '/resources/js',
     },
+  },
 });
